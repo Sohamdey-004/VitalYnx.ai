@@ -1,0 +1,2 @@
+# Two-minute hackathon demo
+1. Register and complete the wizard. 2. Choose **Normal** and run a health check. 3. Show the saved dashboard/ECG and records graph. 4. Choose **Emergency** to show high-risk escalation and Emergency Center. 5. Open Wokwi, send `EMERGENCY` in Serial Monitor, then describe the protected ESP32 POST flow. Emphasize: all readings and ECG are simulated; this is safety-focused screening, not diagnosis.

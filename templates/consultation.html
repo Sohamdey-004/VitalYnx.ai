@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Consultation guide · Vitalynx AI{% endblock %}
+{% block content %}
+<header class="consult-header">
+  <div>
+    <p class="eyebrow">PERSONAL WELLNESS GUIDE</p>
+    <h1>Consultation & wellness</h1>
+    <p>Practical, profile-aware ideas to support a conversation with your care team.</p>
+  </div>
+  <span class="consult-header-icon" aria-hidden="true">✦</span>
+</header>
+<section class="consult-device-note {% if device_connected %}is-online{% else %}is-offline{% endif %}">
+  <span class="consult-device-icon" aria-hidden="true">{% if device_connected %}✓{% else %}⌁{% endif %}</span>
+  <div>
+    <strong>{% if device_connected %}Device connected{% else %}Personal guidance is available{% endif %}</strong>
+    <p>{% if device_connected %}Suggestions may consider your latest device reading.{% else %}Your device is disconnected. This page uses your profile only and does not display vital readings.{% endif %}</p>
+  </div>
+  {% if not device_connected %}<a href="/dashboard">Connect device</a>{% endif %}
+</section>
+<section class="consult-intro panel">
+  <span aria-hidden="true">✧</span>
+  <div><p class="eyebrow">A GUIDE, NOT A DIAGNOSIS</p><h2>Small, informed next steps</h2><p>Use these suggestions as prompts for healthy routines and questions for a qualified clinician. Follow your existing care plan first.</p></div>
+</section>
+<div class="consult-section-heading"><div><p class="eyebrow">BASED ON YOUR PROFILE</p><h2>Wellness suggestions</h2></div><span>Food · movement · safety</span></div>
+<section class="recommendation-grid">
+  {% for item in recommendations %}
+  <article class="recommendation consult-recommendation">
+    <span class="consult-card-mark" aria-hidden="true">{{ loop.index|string }}</span>
+    <p class="eyebrow">PERSONALIZED WELLNESS</p>
+    <h2>{{ item.title }}</h2>
+    <div class="consult-topic"><h3><span aria-hidden="true">◉</span> Food basics</h3><p>{{ item.food }}</p></div>
+    <div class="consult-topic"><h3><span aria-hidden="true">↗</span> Yoga & movement</h3><p>{{ item.movement }}</p></div>
+    <p class="safety-note"><strong>Safety</strong> {{ item.note }}</p>
+  </article>
+  {% endfor %}
+</section>
+<div class="consult-section-heading"><div><p class="eyebrow">QUICK REFERENCE</p><h2>Understanding common readings</h2></div><span>General adult references</span></div>
+<section class="consult-reference-grid">
+  <article><span aria-hidden="true">♥</span><div><h3>Pulse</h3><p>60–100 BPM is a commonly used resting reference for adults. Activity, stress, medication, and health conditions can change it.</p></div></article>
+  <article><span aria-hidden="true">◌</span><div><h3>SpO₂</h3><p>Many healthy readings are 95–100%. Altitude, circulation, device fit, and personal conditions affect interpretation.</p></div></article>
+  <article><span aria-hidden="true">⌁</span><div><h3>Blood pressure</h3><p>Below 120/80 mmHg is a general reference. A clinician considers repeated measurements and your health context.</p></div></article>
+  <article><span aria-hidden="true">∿</span><div><h3>ECG</h3><p>ECG interpretation depends on waveform features and clinical context; a single number cannot confirm heart health.</p></div></article>
+</section>
+<section class="consult-care-note"><span aria-hidden="true">!</span><div><h2>When to seek urgent help</h2><p>Seek urgent professional care for severe chest discomfort, major breathing difficulty, fainting, or severe weakness. This page cannot assess emergencies.</p></div></section>
+{% endblock %}

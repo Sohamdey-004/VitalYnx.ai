@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Health history · Vitalynx AI{% endblock %}
+{% block content %}
+<header class="history-header">
+  <div>
+    <p class="eyebrow">YOUR MEASUREMENTS</p>
+    <h1>Health history</h1>
+    <p>Device readings from the last {{ history_days }} days, grouped by day in the trend chart.</p>
+  </div>
+  <span class="history-range"><span aria-hidden="true">◷</span> LAST {{ history_days }} DAYS</span>
+</header>
+<section class="history-stats cards" aria-label="Monthly history summary">
+  <article><small>DEVICE READINGS</small><strong>{{ total }}</strong><span>in the last {{ history_days }} days</span></article>
+  <article><small>AVERAGE PULSE</small><strong>{{ avg_pulse if avg_pulse is not none else '—' }}{% if avg_pulse is not none %}<em> BPM</em>{% endif %}</strong><span>across recorded readings</span></article>
+  <article><small>DAYS WITH READINGS</small><strong>{{ active_days }}</strong><span>of the last {{ history_days }} days</span></article>
+</section>
+<section class="panel history-chart-panel">
+  <div class="history-section-heading">
+    <div><p class="eyebrow">30-DAY TREND</p><h2>Vital signs over time</h2></div>
+    <span class="history-chart-note">Daily averages · device readings</span>
+  </div>
+  {% if total %}
+  <div class="history-chart-wrap"><canvas id="monthlyHistoryChart" aria-label="Daily average pulse, oxygen saturation, and blood pressure for the last 30 days"></canvas></div>
+  <div class="history-legend"><span><i class="legend-pulse"></i> Pulse (BPM)</span><span><i class="legend-spo2"></i> SpO₂ (%)</span><span><i class="legend-systolic"></i> Systolic (mmHg)</span><span><i class="legend-diastolic"></i> Diastolic (mmHg)</span></div>
+  {% else %}
+  <div class="history-empty"><span aria-hidden="true">⌁</span><h3>No device readings in this period</h3><p>When your connected device sends readings, they will appear here for 30 days.</p></div>
+  {% endif %}
+</section>
+<section class="panel history-table-panel">
+  <div class="history-section-heading">
+    <div><p class="eyebrow">RECENT MEASUREMENTS</p><h2>Reading log</h2></div>
+    {% if total %}<span class="history-chart-note">{{ total }} total · {{ page }} of {{ pages }} pages</span>{% endif %}
+  </div>
+  {% if readings %}
+  <div class="history-table-scroll"><table>
+    <thead><tr><th>Date and time</th><th>Pulse</th><th>SpO₂</th><th>Blood pressure</th><th>Heart rate</th><th>Screening</th></tr></thead>
+    <tbody>{% for r in readings %}
+    <tr><td><time data-local-datetime datetime="{{ r.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') }}">{{ r.created_at.strftime('%d %b %Y %H:%M') }}</time></td><td>{{ r.pulse }} BPM</td><td>{{ r.spo2 }}%</td><td>{{ r.systolic }}/{{ r.diastolic }} mmHg</td><td>{{ r.heart_rate }} BPM</td><td><span class="badge {{ r.risk_level }}">{{ r.risk_level.replace('_',' ') }}</span></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% if pages > 1 %}<nav class="history-pagination" aria-label="History pages">
+    {% if page > 1 %}<a class="button secondary" href="{{ url_for('records.records', page=page-1) }}">← Newer</a>{% else %}<span></span>{% endif %}
+    <span>Page {{ page }} of {{ pages }}</span>
+    {% if page < pages %}<a class="button secondary" href="{{ url_for('records.records', page=page+1) }}">Older →</a>{% endif %}
+  </nav>{% endif %}
+  {% else %}<p class="history-empty-table">No device readings have been saved in the last {{ history_days }} days.</p>{% endif %}
+</section>
+{% if total %}<script>
+fetch('/api/trends', { headers: { Accept: 'application/json' } })
+  .then(response => response.json())
+  .then(data => {
+    const labels = data.labels.map(day => new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+    const line = (label, values, color, axis) => ({ label, data: values, yAxisID: axis, borderColor: color, backgroundColor: color, borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 5, tension: .32, spanGaps: true });
+    new Chart(document.querySelector('#monthlyHistoryChart'), {
+      type: 'line',
+      data: { labels, datasets: [
+        line('Pulse (BPM)', data.pulse, '#6254e8', 'vitals'),
+        line('SpO₂ (%)', data.spo2, '#13ad89', 'oxygen'),
+        line('Systolic (mmHg)', data.systolic, '#ed8b47', 'vitals'),
+        line('Diastolic (mmHg)', data.diastolic, '#4c8fdc', 'vitals'),
+      ] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#122846', padding: 12, usePointStyle: true },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#718096', maxTicksLimit: 10 } },
+          vitals: { type: 'linear', position: 'left', suggestedMin: 40, suggestedMax: 180, grid: { color: '#edf0f6' }, ticks: { color: '#718096' } },
+          oxygen: { type: 'linear', position: 'right', min: 85, max: 100, grid: { drawOnChartArea: false }, ticks: { color: '#718096', callback: value => `${value}%` } },
+        },
+      },
+    });
+  });
+</script>{% endif %}
+{% endblock %}
